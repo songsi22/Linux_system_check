@@ -23,8 +23,6 @@
 ########## Environment Variables ##########
 
 export LANG=C
-export LANG=en_US
-HOST=`/bin/hostname`
 HOST=`/bin/hostname`
 TODAY=`/bin/date +%Y%m%d-%H%M%S`
 LOGPATH="/IBM_System_check/Result"
