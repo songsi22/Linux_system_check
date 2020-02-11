@@ -53,7 +53,7 @@ fi
 # This part prepares system environment to use the script "Linux_system_check.sh"
 # This part simply creates and copy some directories, files. so there are no affect to system.
 
-if [ `ls -artl / | grep -w IBM_System_check | wc -l` -eq 1 ] ; then
+if [ -e "/IBM_System_check" ] ; then
   echo -e "\n"
 else
   mkdir -p /IBM_System_check
