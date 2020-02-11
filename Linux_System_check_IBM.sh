@@ -56,11 +56,10 @@ fi
 if [ `ls -artl / | grep -w IBM_System_check | wc -l` -eq 1 ] ; then
   echo -e "\n"
 else
-  mkdir -p /IBM_System_check
   mkdir -p /IBM_System_check/Resource
   mkdir -p /IBM_System_check/Result
-  mv ./Linux_System_check_IBM.sh /IBM_System_check/Linux_System_check_IBM.sh
-  chmod 700 /IBM_System_check/Linux_System_check_IBM.sh
+  mv ./$SCRIPTNAME /IBM_System_check/$SCRIPTNAME
+  chmod 700 /IBM_System_check/$SCRIPTNAME
 fi
 
 
