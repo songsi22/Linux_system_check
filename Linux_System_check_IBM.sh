@@ -23,13 +23,12 @@
 ########## Environment Variables ##########
 
 export LANG=C
-export LANG=en_US
-HOST=`/bin/hostname`
 HOST=`/bin/hostname`
 TODAY=`/bin/date +%Y%m%d-%H%M%S`
-LOGPATH="/IBM_System_check/Result"
-tmp_file=$LOGPATH/$TODAY.$HOST.system_check.log
-SCRIPTNAME=Linux_System_check_IBM.sh
+LOGRESULT="/IBM_System_check/Result"
+tmp_file=$LOGRESULT/$TODAY.$HOST.system_check.log
+SCRIPTNAME=$0
+LOGRESOURCE=$LOGRESOURCE
 CHKDATE_NOW=`date "+%Y%m"`
 CHKDATE_BEFORE=`date -d "-1 months" "+%Y%m"`
 OSCHK=`uname -r | awk -F '.' '{print $1}'`
@@ -48,225 +47,224 @@ if [ $CHKID -eq 0 ]; then
   exit
 fi
 
-
 ########### IBM_System_check directory create once ##########
 # This part prepares system environment to use the script "Linux_system_check.sh"
 # This part simply creates and copy some directories, files. so there are no affect to system.
 
-if [ `ls -artl / | grep -w IBM_System_check | wc -l` -eq 1 ] ; then
+if [ -d '/IBM_System_check' ] ; then
   echo -e "\n"
 else
-  mkdir -p /IBM_System_check
-  mkdir -p /IBM_System_check/Resource
-  mkdir -p /IBM_System_check/Result
-  mv ./Linux_System_check_IBM.sh /IBM_System_check/Linux_System_check_IBM.sh
+  mkdir -p $LOGRESOURCE
+  mkdir -p $LOGRESULT
+  mv ./$0 /IBM_System_check/Linux_System_check_IBM.sh
   chmod 700 /IBM_System_check/Linux_System_check_IBM.sh
 fi
 
-
+function logoutput
+{
 ########## Begin executing Script ##########
 clear
 echo -e "\nBegining The script : $SCRIPTNAME"
 echo -e "It may take several minutes..\n"
-echo "$SCRIPTNAME" &>> $tmp_file
-echo "Collect Date : "$TODAY &>> $tmp_file
-echo -e "\n" &>> $tmp_file
-mkdir /IBM_System_check/Resource/$CHKDATE_NOW
+echo "$SCRIPTNAME" 
+echo "Collect Date : "$TODAY  
+echo -e "\n"  
+mkdir $LOGRESOURCE/$CHKDATE_NOW
 
 
 ########## Basic Information ##########
 
-echo "**************************************************************************" &>> $tmp_file
-echo "BASIC INFORMATION" &>> $tmp_file
-echo "**************************************************************************" &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "**************************************************************************"  
+echo "BASIC INFORMATION"  
+echo "**************************************************************************"  
+echo -e "\n"  
 
-echo "== HOSTNAME ==" &>> $tmp_file
-hostname &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== HOSTNAME =="  
+hostname  
+echo -e "\n"  
 
-echo "== OS VERSION ==" &>> $tmp_file
+echo "== OS VERSION =="  
 if [ -f /etc/redhat-release ];
 then
-  cat /etc/redhat-release &>> $tmp_file
+  cat /etc/redhat-release  
 else
-  cat /etc/centos-release &>> $tmp_file
+  cat /etc/centos-release  
 fi
-echo -e "\n" &>> $tmp_file
+echo -e "\n"  
 
-echo "== KERNEL VERSION ==" &>> $tmp_file
-uname -r &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== KERNEL VERSION =="  
+uname -r  
+echo -e "\n"  
 
-echo "== SYSTEM INFORMATION ==" &>> $tmp_file
-dmidecode -t system | egrep "Manufacturer|Product|Serial" | sed -e 's/\s//g' &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== SYSTEM INFORMATION =="  
+dmidecode -t system | egrep "Manufacturer|Product|Serial" | sed -e 's/\s//g'  
+echo -e "\n"  
 
 
 ########## Hardware Information ##########
 
-echo "**************************************************************************" &>> $tmp_file
-echo "HARDWARE INFORMATION" &>> $tmp_file
-echo "**************************************************************************" &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "**************************************************************************"  
+echo "HARDWARE INFORMATION"  
+echo "**************************************************************************"  
+echo -e "\n"  
 
-echo "== lspci CHANGES ==" &>> $tmp_file
-lspci &>> /IBM_System_check/Resource/$CHKDATE_NOW/lspci
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/lspci /IBM_System_check/Resource/$CHKDATE_NOW/lspci &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== lspci CHANGES =="  
+lspci  $LOGRESOURCE/$CHKDATE_NOW/lspci
+diff $LOGRESOURCE/$CHKDATE_BEFORE/lspci $LOGRESOURCE/$CHKDATE_NOW/lspci  
+echo -e "\n"  
 
 ########## CPU Information ##########
 
-echo "**************************************************************************" &>> $tmp_file
-echo "CPU INFORMATION" &>> $tmp_file
-echo "**************************************************************************" &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "**************************************************************************"  
+echo "CPU INFORMATION"  
+echo "**************************************************************************"  
+echo -e "\n"  
 
-echo "== CPU dmidecode CHANGES ==" &>> $tmp_file
-dmidecode -t processor | egrep "Version|Core|Thread" &>> /IBM_System_check/Resource/$CHKDATE_NOW/dmidecode_cpu
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/dmidecode_cpu /IBM_System_check/Resource/$CHKDATE_NOW/dmidecode_cpu &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== CPU dmidecode CHANGES =="  
+dmidecode -t processor | egrep "Version|Core|Thread"  $LOGRESOURCE/$CHKDATE_NOW/dmidecode_cpu
+diff $LOGRESOURCE/$CHKDATE_BEFORE/dmidecode_cpu $LOGRESOURCE/$CHKDATE_NOW/dmidecode_cpu  
+echo -e "\n"  
 
-echo "== cpuinfo CHANGES ==" &>> $tmp_file
-cat /proc/cpuinfo &>> /IBM_System_check/Resource/$CHKDATE_NOW/cpuinfo
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/cpuinfo /IBM_System_check/Resource/$CHKDATE_NOW/cpuinfo &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== cpuinfo CHANGES =="  
+cat /proc/cpuinfo  $LOGRESOURCE/$CHKDATE_NOW/cpuinfo
+diff $LOGRESOURCE/$CHKDATE_BEFORE/cpuinfo $LOGRESOURCE/$CHKDATE_NOW/cpuinfo  
+echo -e "\n"  
 
 
 ########## MEMORY INFORMATION ##########
 
-echo "**************************************************************************" &>> $tmp_file
-echo "MEMORY INFORMATION" &>> $tmp_file
-echo "**************************************************************************" &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "**************************************************************************"  
+echo "MEMORY INFORMATION"  
+echo "**************************************************************************"  
+echo -e "\n"  
 
-echo "== MEMORY USAGE ==" &>> $tmp_file
-free -m &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== MEMORY USAGE =="  
+free -m  
+echo -e "\n"  
 
-echo "== SWAP CHANGES ==" &>> $tmp_file
-swapon -s | awk {'print $1"   "$2"   "$3'} &>> /IBM_System_check/Resource/$CHKDATE_NOW/swapons
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/swapons /IBM_System_check/Resource/$CHKDATE_NOW/swapons &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== SWAP CHANGES =="  
+swapon -s | awk {'print $1"   "$2"   "$3'}  $LOGRESOURCE/$CHKDATE_NOW/swapons
+diff $LOGRESOURCE/$CHKDATE_BEFORE/swapons $LOGRESOURCE/$CHKDATE_NOW/swapons  
+echo -e "\n"  
 
-echo "== CORRUPTED MEMORY ==" &>> $tmp_file
-cat /proc/meminfo | grep -i "HardwareCorrupted" &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== CORRUPTED MEMORY =="  
+cat /proc/meminfo | grep -i "HardwareCorrupted"  
+echo -e "\n"  
 
-echo "== MEMORY dmidecode CHANGES ==" &>> $tmp_file
-dmidecode -t memory | egrep "Installed|Enabled" &>> /IBM_System_check/Resource/$CHKDATE_NOW/dmidecode_mem
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/dmidecode_mem /IBM_System_check/Resource/$CHKDATE_NOW/dmidecode_mem &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== MEMORY dmidecode CHANGES =="  
+dmidecode -t memory | egrep "Installed|Enabled"  $LOGRESOURCE/$CHKDATE_NOW/dmidecode_mem
+diff $LOGRESOURCE/$CHKDATE_BEFORE/dmidecode_mem $LOGRESOURCE/$CHKDATE_NOW/dmidecode_mem  
+echo -e "\n"  
 
 
 ########## BOOTING CONFIGURATION ##########
 
-echo "**************************************************************************" &>> $tmp_file
-echo "BOOTING CONFIGURATION" &>> $tmp_file
-echo "**************************************************************************" &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "**************************************************************************"  
+echo "BOOTING CONFIGURATION"  
+echo "**************************************************************************"  
+echo -e "\n"  
 
-echo "== UPTIME ==" &>> $tmp_file
-uptime &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== UPTIME =="  
+uptime  
+echo -e "\n"  
 
-echo "== grub.cfg CHANGES ==" &>> $tmp_file
+echo "== grub.cfg CHANGES =="  
 if [ -f /boot/efi/EFI/redhat/grub.cfg ]; then
-  cat /boot/efi/EFI/redhat/grub.cfg &>> /IBM_System_check/Resource/$CHKDATE_NOW/grub-cfg
+  cat /boot/efi/EFI/redhat/grub.cfg  $LOGRESOURCE/$CHKDATE_NOW/grub-cfg
 elif [ -d /boot/efi/EFI/centos/grub.cfg ]; then
-  cat /boot/efi/EFI/centos/grub.cfg &>> /IBM_System_check/Resource/$CHKDATE_NOW/grub-cfg
+  cat /boot/efi/EFI/centos/grub.cfg  $LOGRESOURCE/$CHKDATE_NOW/grub-cfg
 else
-  cat /boot/grub2/grub.cfg &>> /IBM_System_check/Resource/$CHKDATE_NOW/grub-cfg
+  cat /boot/grub2/grub.cfg  $LOGRESOURCE/$CHKDATE_NOW/grub-cfg
 fi
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/grub-cfg /IBM_System_check/Resource/$CHKDATE_NOW/grub-cfg &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+diff $LOGRESOURCE/$CHKDATE_BEFORE/grub-cfg $LOGRESOURCE/$CHKDATE_NOW/grub-cfg  
+echo -e "\n"  
 
-echo "== grub Prameter CHANGES ==" &>> $tmp_file
-cat /proc/cmdline &>> /IBM_System_check/Resource/$CHKDATE_NOW/grub_cmdline
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/grub_cmdline /IBM_System_check/Resource/$CHKDATE_NOW/grub_cmdline &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== grub Prameter CHANGES =="  
+cat /proc/cmdline  $LOGRESOURCE/$CHKDATE_NOW/grub_cmdline
+diff $LOGRESOURCE/$CHKDATE_BEFORE/grub_cmdline $LOGRESOURCE/$CHKDATE_NOW/grub_cmdline  
+echo -e "\n"  
 
-echo "== Booting Target CHANGES ==" &>> $tmp_file
+echo "== Booting Target CHANGES =="  
 if [ $OSCHK -eq 3 ];
 then
-   systemctl get-default &>> /IBM_System_check/Resource/$CHKDATE_NOW/get-default
-   diff /IBM_System_check/Resource/$CHKDATE_BEFORE/get-default /IBM_System_check/Resource/$CHKDATE_NOW/get-default &>> $tmp_file
+   systemctl get-default  $LOGRESOURCE/$CHKDATE_NOW/get-default
+   diff $LOGRESOURCE/$CHKDATE_BEFORE/get-default $LOGRESOURCE/$CHKDATE_NOW/get-default  
 else
-   who -r &>> /IBM_System_check/Resource/$CHKDATE_NOW/who_r
-   diff /IBM_System_check/Resource/$CHKDATE_BEFORE/who_r /IBM_System_check/Resource/$CHKDATE_NOW/who_r &>> $tmp_file
+   who -r  $LOGRESOURCE/$CHKDATE_NOW/who_r
+   diff $LOGRESOURCE/$CHKDATE_BEFORE/who_r $LOGRESOURCE/$CHKDATE_NOW/who_r  
 fi
-echo -e "\n" &>> $tmp_file
+echo -e "\n"  
 
-echo "== fstab CHANGES ==" &>> $tmp_file
-cat /etc/fstab &>> /IBM_System_check/Resource/$CHKDATE_NOW/fstab
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/fstab /IBM_System_check/Resource/$CHKDATE_NOW/fstab &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== fstab CHANGES =="  
+cat /etc/fstab  $LOGRESOURCE/$CHKDATE_NOW/fstab
+diff $LOGRESOURCE/$CHKDATE_BEFORE/fstab $LOGRESOURCE/$CHKDATE_NOW/fstab  
+echo -e "\n"  
 
-echo "== rc.local CHANGES ==" &>> $tmp_file
-cat /etc/rc.local &>> /IBM_System_check/Resource/$CHKDATE_NOW/rc_local
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/rc_local /IBM_System_check/Resource/$CHKDATE_NOW/rc_local &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== rc.local CHANGES =="  
+cat /etc/rc.local  $LOGRESOURCE/$CHKDATE_NOW/rc_local
+diff $LOGRESOURCE/$CHKDATE_BEFORE/rc_local $LOGRESOURCE/$CHKDATE_NOW/rc_local  
+echo -e "\n"  
 
 
 ########## SYSTEM ENVIRONMENT INFORMATION ##########
 
-echo "**************************************************************************" &>> $tmp_file
-echo "SYSTEM ENVIRONMENT INFORMATION" &>> $tmp_file
-echo "**************************************************************************" &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "**************************************************************************"  
+echo "SYSTEM ENVIRONMENT INFORMATION"  
+echo "**************************************************************************"  
+echo -e "\n"  
 
-echo "== selinux CHANGES ==" &>> $tmp_file
-cat /etc/selinux/config &>> /IBM_System_check/Resource/$CHKDATE_NOW/selinux
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/selinux /IBM_System_check/Resource/$CHKDATE_NOW/selinux &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== selinux CHANGES =="  
+cat /etc/selinux/config  $LOGRESOURCE/$CHKDATE_NOW/selinux
+diff $LOGRESOURCE/$CHKDATE_BEFORE/selinux $LOGRESOURCE/$CHKDATE_NOW/selinux  
+echo -e "\n"  
 
-echo "== sysctl CHANGES ==" &>> $tmp_file
-cat /etc/sysctl.conf &>> /IBM_System_check/Resource/$CHKDATE_NOW/sysctl_conf
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/sysctl_conf /IBM_System_check/Resource/$CHKDATE_NOW/sysctl_conf &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== sysctl CHANGES =="  
+cat /etc/sysctl.conf  $LOGRESOURCE/$CHKDATE_NOW/sysctl_conf
+diff $LOGRESOURCE/$CHKDATE_BEFORE/sysctl_conf $LOGRESOURCE/$CHKDATE_NOW/sysctl_conf  
+echo -e "\n"  
 
-echo "== GLOBAL ENVIRONMENT CHANGES ==" &>> $tmp_file
-echo -e "\n" &>> $tmp_file
-echo "/etc/profile" &>> $tmp_file
-cat /etc/profile &>> /IBM_System_check/Resource/$CHKDATE_NOW/profile
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/profile /IBM_System_check/Resource/$CHKDATE_NOW/profile &>> $tmp_file
-echo -e "\n" &>> $tmp_file
-echo "/etc/bashrc" &>> $tmp_file
-cat /etc/bashrc &>> /IBM_System_check/Resource/$CHKDATE_NOW/bashrc
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/bashrc /IBM_System_check/Resource/$CHKDATE_NOW/bashrc &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== GLOBAL ENVIRONMENT CHANGES =="  
+echo -e "\n"  
+echo "/etc/profile"  
+cat /etc/profile  $LOGRESOURCE/$CHKDATE_NOW/profile
+diff $LOGRESOURCE/$CHKDATE_BEFORE/profile $LOGRESOURCE/$CHKDATE_NOW/profile  
+echo -e "\n"  
+echo "/etc/bashrc"  
+cat /etc/bashrc  $LOGRESOURCE/$CHKDATE_NOW/bashrc
+diff $LOGRESOURCE/$CHKDATE_BEFORE/bashrc $LOGRESOURCE/$CHKDATE_NOW/bashrc  
+echo -e "\n"  
 
 
 ########## ACCOUNT INFORMATION ##########
 
-echo "**************************************************************************" &>> $tmp_file
-echo "ACCOUNT INFORMATION" &>> $tmp_file
-echo "**************************************************************************" &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "**************************************************************************"  
+echo "ACCOUNT INFORMATION"  
+echo "**************************************************************************"  
+echo -e "\n"  
 
-echo "== SESSIONS NOW CONNECTED ==" &>> $tmp_file
-echo "$(last | grep still | wc -l) session connected now." &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== SESSIONS NOW CONNECTED =="  
+echo "$(last | grep still | wc -l) session connected now."  
+echo -e "\n"  
 
-echo "== /etc/passwd CHANGES ==" &>> $tmp_file
-cat /etc/passwd &>> /IBM_System_check/Resource/$CHKDATE_NOW/account_passwd
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/account_passwd /IBM_System_check/Resource/$CHKDATE_NOW/account_passwd &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== /etc/passwd CHANGES =="  
+cat /etc/passwd  $LOGRESOURCE/$CHKDATE_NOW/account_passwd
+diff $LOGRESOURCE/$CHKDATE_BEFORE/account_passwd $LOGRESOURCE/$CHKDATE_NOW/account_passwd  
+echo -e "\n"  
 
-echo "== /etc/group CHANGES ==" &>> $tmp_file
-cat /etc/group &>> /IBM_System_check/Resource/$CHKDATE_NOW/account_group
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/account_group /IBM_System_check/Resource/$CHKDATE_NOW/account_group &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== /etc/group CHANGES =="  
+cat /etc/group  $LOGRESOURCE/$CHKDATE_NOW/account_group
+diff $LOGRESOURCE/$CHKDATE_BEFORE/account_group $LOGRESOURCE/$CHKDATE_NOW/account_group  
+echo -e "\n"  
 
 
 ########## STORAGE INFORMATION ##########
 
-echo "**************************************************************************" &>> $tmp_file
-echo "STORAGE INFORMATION" &>> $tmp_file
-echo "**************************************************************************" &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "**************************************************************************"  
+echo "STORAGE INFORMATION"  
+echo "**************************************************************************"  
+echo -e "\n"  
 
-echo "== FILESYSTEM USAGE OVER 80% ==" &>> $tmp_file
+echo "== FILESYSTEM USAGE OVER 80% =="  
 FSTHRESHOLD=80
 ### Check Filesystem Usage
 FS_USE_LISTS=`df -Ph | grep -v Filesystem | awk '{print $6,$5}'`
@@ -279,14 +277,14 @@ for FSTMP in ${FS_USE_LISTS}; do
                 FSUSAGESIZE=`echo ${FSTMP} | cut -d ' ' -f 2 | cut -d '%' -f 1`
                 #echo ${FSUSAGESIZE}
                 if [ ${FSUSAGESIZE} -gt ${FSTHRESHOLD} ]; then
-                        echo ''${FS_NAME}' = '${FSUSAGESIZE}'%' &>> $tmp_file
+                        echo ''${FS_NAME}' = '${FSUSAGESIZE}'%'  
                 fi
         fi
         FSIDX=$((FSIDX+1))
 done
-echo -e "\n" &>> $tmp_file
+echo -e "\n"  
 
-echo "== I-NODE USAGE OVER 80% ==" &>> $tmp_file
+echo "== I-NODE USAGE OVER 80% =="  
 INODETHRESHOLD=80
 ### Check Filesystem Usage
 FS_USE_LISTS=`df -Pi | grep -v Filesystem | awk '{print $6,$5}' | grep -v /boot/efi`
@@ -299,393 +297,394 @@ for INODETMP in ${FS_USE_LISTS}; do
                 INODEUSAGESIZE=`echo ${INODETMP} | cut -d ' ' -f 2 | cut -d '%' -f 1`
                 #echo ${INODEUSAGESIZE}
                 if [ ${INODEUSAGESIZE} -gt ${INODETHRESHOLD} ]; then
-                        echo ''${FS_NAME}' = '${INODEUSAGESIZE}'%' &>> $tmp_file
+                        echo ''${FS_NAME}' = '${INODEUSAGESIZE}'%'  
                 fi
         fi
         INODEIDX=$((INODEIDX+1))
 done
-echo -e "\n" &>> $tmp_file
+echo -e "\n"  
 
-echo "== PV CHANGES ==" &>> $tmp_file
-pvs &>> /IBM_System_check/Resource/$CHKDATE_NOW/pvs
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/pvs /IBM_System_check/Resource/$CHKDATE_NOW/pvs &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== PV CHANGES =="  
+pvs  $LOGRESOURCE/$CHKDATE_NOW/pvs
+diff $LOGRESOURCE/$CHKDATE_BEFORE/pvs $LOGRESOURCE/$CHKDATE_NOW/pvs  
+echo -e "\n"  
 
-echo "== VG CHANGES ==" &>> $tmp_file
-vgs &>> /IBM_System_check/Resource/$CHKDATE_NOW/vgs
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/vgs /IBM_System_check/Resource/$CHKDATE_NOW/vgs &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== VG CHANGES =="  
+vgs  $LOGRESOURCE/$CHKDATE_NOW/vgs
+diff $LOGRESOURCE/$CHKDATE_BEFORE/vgs $LOGRESOURCE/$CHKDATE_NOW/vgs  
+echo -e "\n"  
 
-echo "== LV CHANGES ==" &>> $tmp_file
-lvs &>> /IBM_System_check/Resource/$CHKDATE_NOW/lvs
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/lvs /IBM_System_check/Resource/$CHKDATE_NOW/lvs &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== LV CHANGES =="  
+lvs  $LOGRESOURCE/$CHKDATE_NOW/lvs
+diff $LOGRESOURCE/$CHKDATE_BEFORE/lvs $LOGRESOURCE/$CHKDATE_NOW/lvs  
+echo -e "\n"  
 
-echo "== lvm.conf CHANGES ==" &>> $tmp_file
-cat /etc/lvm/lvm.conf &>> /IBM_System_check/Resource/$CHKDATE_NOW/lvmconf
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/lvmconf /IBM_System_check/Resource/$CHKDATE_NOW/lvmconf &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== lvm.conf CHANGES =="  
+cat /etc/lvm/lvm.conf  $LOGRESOURCE/$CHKDATE_NOW/lvmconf
+diff $LOGRESOURCE/$CHKDATE_BEFORE/lvmconf $LOGRESOURCE/$CHKDATE_NOW/lvmconf  
+echo -e "\n"  
 
-echo "== RO mount STATUS ==" &>> $tmp_file
-mount | grep ro, | grep -v tmpfs &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== RO mount STATUS =="  
+mount | grep ro, | grep -v tmpfs  
+echo -e "\n"  
 
-echo "== MULTIPATH STATUS ==" &>> $tmp_file
+echo "== MULTIPATH STATUS =="  
 if [ -f /etc/multipath.conf ];
 then
-  multipath -ll &>> $tmp_file
+  multipath -ll  
 else
-  echo "multipath is not installed .." &>> $tmp_file
+  echo "multipath is not installed .."  
 fi
-echo -e "\n" &>> $tmp_file
+echo -e "\n"  
 
-echo "== multipath.conf CHANGES ==" &>> $tmp_file
+echo "== multipath.conf CHANGES =="  
 if [ -f /etc/multipath.conf ];
 then
-  cat /etc/multipath.conf &>> /IBM_System_check/Resource/$CHKDATE_NOW/multipathconf
-  diff /IBM_System_check/Resource/$CHKDATE_BEFORE/multipathconf /IBM_System_check/Resource/$CHKDATE_NOW/multipathconf &>> $tmp_file
+  cat /etc/multipath.conf  $LOGRESOURCE/$CHKDATE_NOW/multipathconf
+  diff $LOGRESOURCE/$CHKDATE_BEFORE/multipathconf $LOGRESOURCE/$CHKDATE_NOW/multipathconf  
 else
-  echo "multipath is not installed .." &>> $tmp_file
+  echo "multipath is not installed .."  
 fi
-echo -e "\n" &>> $tmp_file
+echo -e "\n"  
 
-echo "== multipath WWID CHANGES ==" &>> $tmp_file
+echo "== multipath WWID CHANGES =="  
 if [ -f /etc/multipath.conf ];
 then
-  cat /etc/multipath/wwids &>> /IBM_System_check/Resource/$CHKDATE_NOW/wwids
-  diff /IBM_System_check/Resource/$CHKDATE_BEFORE/wwids /IBM_System_check/Resource/$CHKDATE_NOW/wwids &>> $tmp_file
+  cat /etc/multipath/wwids  $LOGRESOURCE/$CHKDATE_NOW/wwids
+  diff $LOGRESOURCE/$CHKDATE_BEFORE/wwids $LOGRESOURCE/$CHKDATE_NOW/wwids  
 else
-  echo "multipath is not installed .." &>> $tmp_file
+  echo "multipath is not installed .."  
 fi
-echo -e "\n" &>> $tmp_file
+echo -e "\n"  
 
-echo "== multipath Bindings CHANGES ==" &>> $tmp_file
+echo "== multipath Bindings CHANGES =="  
 if [ -f /etc/multipath.conf ];
 then
-  cat /etc/multipath/bindings &>> /IBM_System_check/Resource/$CHKDATE_NOW/bindings
-  diff /IBM_System_check/Resource/$CHKDATE_BEFORE/bindings /IBM_System_check/Resource/$CHKDATE_NOW/bindings &>> $tmp_file
+  cat /etc/multipath/bindings  $LOGRESOURCE/$CHKDATE_NOW/bindings
+  diff $LOGRESOURCE/$CHKDATE_BEFORE/bindings $LOGRESOURCE/$CHKDATE_NOW/bindings  
 else
-  echo "multipath is not installed .." &>> $tmp_file
+  echo "multipath is not installed .."  
 fi
-echo -e "\n" &>> $tmp_file
+echo -e "\n"  
 
-echo "== lsscsi CHANGES ==" &>> $tmp_file
-lsscsi --scsi_id &>> /IBM_System_check/Resource/$CHKDATE_NOW/lsscsi
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/lsscsi /IBM_System_check/Resource/$CHKDATE_NOW/lsscsi &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== lsscsi CHANGES =="  
+lsscsi --scsi_id  $LOGRESOURCE/$CHKDATE_NOW/lsscsi
+diff $LOGRESOURCE/$CHKDATE_BEFORE/lsscsi $LOGRESOURCE/$CHKDATE_NOW/lsscsi  
+echo -e "\n"  
 
 
 ########## PACKAGE STATUS ##########
 # it marks "#" during test period, because it takes a lot of time.#
 
-echo "**************************************************************************" &>> $tmp_file
-echo "PACKAGE STATUS" &>> $tmp_file
-echo "**************************************************************************" &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "**************************************************************************"  
+echo "PACKAGE STATUS"  
+echo "**************************************************************************"  
+echo -e "\n"  
 
-echo "== yum history CHANGES ==" &>> $tmp_file
-yum history &>> /IBM_System_check/Resource/$CHKDATE_NOW/yumhistory
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/yumhistory /IBM_System_check/Resource/$CHKDATE_NOW/yumhistory &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== yum history CHANGES =="  
+yum history  $LOGRESOURCE/$CHKDATE_NOW/yumhistory
+diff $LOGRESOURCE/$CHKDATE_BEFORE/yumhistory $LOGRESOURCE/$CHKDATE_NOW/yumhistory  
+echo -e "\n"  
 
-echo "== last rpm CHANGES ==" &>> $tmp_file
-rpm -qa --last &>> /IBM_System_check/Resource/$CHKDATE_NOW/rpmlast
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/rpmlast /IBM_System_check/Resource/$CHKDATE_NOW/rpmlast &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== last rpm CHANGES =="  
+rpm -qa --last  $LOGRESOURCE/$CHKDATE_NOW/rpmlast
+diff $LOGRESOURCE/$CHKDATE_BEFORE/rpmlast $LOGRESOURCE/$CHKDATE_NOW/rpmlast  
+echo -e "\n"  
 
 
 ########## KDUMP INFORMATION ##########
 
-echo "**************************************************************************" &>> $tmp_file
-echo "KDUMP INFORMATION" &>> $tmp_file
-echo "**************************************************************************" &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "**************************************************************************"  
+echo "KDUMP INFORMATION"  
+echo "**************************************************************************"  
+echo -e "\n"  
 
-echo "== KDUMP STATUS ==" &>> $tmp_file
+echo "== KDUMP STATUS =="  
 if [ $OSCHK -eq 3 ];
 then
-   systemctl status kdump &>> $tmp_file
+   systemctl status kdump  
 else
-   service kdump status &>> $tmp_file
+   service kdump status  
 fi
-echo -e "\n" &>> $tmp_file
+echo -e "\n"  
 
-echo "== KDUMP FILE CHECK ==" &>> $tmp_file
+echo "== KDUMP FILE CHECK =="  
 if [ `ls -artl /boot | grep kdump | wc -l` -eq 0 ];
 then
-  echo "There is no kdump.img file.." &>> $tmp_file
+  echo "There is no kdump.img file.."  
 else
-  ls -artl /boot | grep kdump &>> $tmp_file
-  stat /boot/*kdump.img | grep Modify &>> $tmp_file
+  ls -artl /boot | grep kdump  
+  stat /boot/*kdump.img | grep Modify  
 fi
-echo -e "\n" &>> $tmp_file
+echo -e "\n"  
 
-echo "== crashkernel CHANGES ==" &>> $tmp_file
-cat /proc/cmdline | grep crashkernel &>> /IBM_System_check/Resource/$CHKDATE_NOW/crashkernel
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/crashkernel /IBM_System_check/Resource/$CHKDATE_NOW/crashkernel &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== crashkernel CHANGES =="  
+cat /proc/cmdline | grep crashkernel  $LOGRESOURCE/$CHKDATE_NOW/crashkernel
+diff $LOGRESOURCE/$CHKDATE_BEFORE/crashkernel $LOGRESOURCE/$CHKDATE_NOW/crashkernel  
+echo -e "\n"  
 
-echo "== KDUMP Configuration CHANGES ==" &>> $tmp_file
-cat /etc/kdump.conf &>> /IBM_System_check/Resource/$CHKDATE_NOW/kdumpconf
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/kdumpconf /IBM_System_check/Resource/$CHKDATE_NOW/kdumpconf &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== KDUMP Configuration CHANGES =="  
+cat /etc/kdump.conf  $LOGRESOURCE/$CHKDATE_NOW/kdumpconf
+diff $LOGRESOURCE/$CHKDATE_BEFORE/kdumpconf $LOGRESOURCE/$CHKDATE_NOW/kdumpconf  
+echo -e "\n"  
 
 
 ########## DAEMON & PROCESS CHECK ##########
 
-echo "**************************************************************************" &>> $tmp_file
-echo "DAEMON & PROCESS CHECK" &>> $tmp_file
-echo "**************************************************************************" &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "**************************************************************************"  
+echo "DAEMON & PROCESS CHECK"  
+echo "**************************************************************************"  
+echo -e "\n"  
 
-echo "== FAILED DAEMON ==" &>> $tmp_file
+echo "== FAILED DAEMON =="  
 if [ $OSCHK -eq 3 ];
 then
-  systemctl --failed &>> $tmp_file
+  systemctl --failed  
 else
-  service --status-all | egrep -i "stop|not|fail|unknown" &>> $tmp_file
+  service --status-all | egrep -i "stop|not|fail|unknown"  
   #the command makes "grep: /proc/fs/nfsd/portlist: No such file or directory" I don't know how to discard this message...
 fi
-echo -e "\n" &>> $tmp_file
+echo -e "\n"  
 
-echo "== ZOMBIE PROCESS CHECK ==" &>> $tmp_file
-ps auxw | grep defunct &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== ZOMBIE PROCESS CHECK =="  
+ps auxw | grep defunct  
+echo -e "\n"  
 
 
 ########## NETWORK INFORMATION ##########
 
-echo "**************************************************************************" &>> $tmp_file
-echo "NETWORK INFORMATION" &>> $tmp_file
-echo "**************************************************************************" &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "**************************************************************************"  
+echo "NETWORK INFORMATION"  
+echo "**************************************************************************"  
+echo -e "\n"  
 
-echo "== PACKET STATUS ==" &>> $tmp_file
-ip -s link | grep -v link/ether &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== PACKET STATUS =="  
+ip -s link | grep -v link/ether  
+echo -e "\n"  
 
-echo "== NETWORK DEVICE STATUS ==" &>> $tmp_file
-ls -artl /etc/sysconfig/network-scripts |grep ifcfg | awk -F 'g-' '{print "ethtool "$2}' | sh | egrep "Setting|Speed|Duplex|detect" &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== NETWORK DEVICE STATUS =="  
+ls -artl /etc/sysconfig/network-scripts |grep ifcfg | awk -F 'g-' '{print "ethtool "$2}' | sh | egrep "Setting|Speed|Duplex|detect"  
+echo -e "\n"  
 
-echo "== PORT STATUS ==" &>> $tmp_file
+echo "== PORT STATUS =="  
 if [ `netstat -nap | egrep "CLOSING|FIN-WAIT1|CLOSE-WAIT|FIN-WAIT2|SYN_RECEIVED|SYN-SENT|CLOSED|TIME-WAIT|LAST-ACK|DISCONNECTING" | wc -l` -eq 0 ];
 then
-  echo "The status of All the ports is optimal." &>> $tmp_file
+  echo "The status of All the ports is optimal."  
 else
-  netstat -nap | egrep "CLOSING|FIN-WAIT1|CLOSE-WAIT|FIN-WAIT2|SYN_RECEIVED|SYN-SENT|CLOSED|TIME-WAIT|LAST-ACK|DISCONNECTING" &>> $tmp_file
+  netstat -nap | egrep "CLOSING|FIN-WAIT1|CLOSE-WAIT|FIN-WAIT2|SYN_RECEIVED|SYN-SENT|CLOSED|TIME-WAIT|LAST-ACK|DISCONNECTING"  
 fi
-echo -e "\n" &>> $tmp_file
+echo -e "\n"  
 
-echo "== BONDING STATUS ==" &>> $tmp_file
+echo "== BONDING STATUS =="  
 if [ -d /proc/net/bonding ]; then
   IFS=$'\n' ARR=(`ls -artl /etc/sysconfig/network-scripts |grep bond | awk -F 'g-' '{print $2}'`)
   for VALUE in "${ARR[@]}"; do echo "<---- $VALUE ---->"; done &>> /dev/null
   ls -artl /etc/sysconfig/network-scripts |grep bond | awk -F 'g-' '{print $2}' &>> /dev/null
-  for value in "${ARR[@]}"; do cat /proc/net/bonding/$value; done | egrep "enp|Status|Speed|Duplex|Bond" &>> $tmp_file
+  for value in "${ARR[@]}"; do cat /proc/net/bonding/$value; done | egrep "enp|Status|Speed|Duplex|Bond"  
 else
-  echo "Bonding isn't configured.." &>> $tmp_file
+  echo "Bonding isn't configured.."  
 fi
-echo -e "\n" &>> $tmp_file
+echo -e "\n"  
 
-echo "== /etc/hosts CHANGES ==" &>> $tmp_file
-cat /etc/hosts &>> /IBM_System_check/Resource/$CHKDATE_NOW/hosts
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/hosts /IBM_System_check/Resource/$CHKDATE_NOW/hosts &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== /etc/hosts CHANGES =="  
+cat /etc/hosts  $LOGRESOURCE/$CHKDATE_NOW/hosts
+diff $LOGRESOURCE/$CHKDATE_BEFORE/hosts $LOGRESOURCE/$CHKDATE_NOW/hosts  
+echo -e "\n"  
 
-echo "== Network device CHANGES ==" &>> $tmp_file
-ip a | grep -v valid &>> /IBM_System_check/Resource/$CHKDATE_NOW/ipa
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/ipa /IBM_System_check/Resource/$CHKDATE_NOW/ipa &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== Network device CHANGES =="  
+ip a | grep -v valid  $LOGRESOURCE/$CHKDATE_NOW/ipa
+diff $LOGRESOURCE/$CHKDATE_BEFORE/ipa $LOGRESOURCE/$CHKDATE_NOW/ipa  
+echo -e "\n"  
 
-echo "== route CHANGES ==" &>> $tmp_file
-route &>> /IBM_System_check/Resource/$CHKDATE_NOW/route
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/route /IBM_System_check/Resource/$CHKDATE_NOW/route &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== route CHANGES =="  
+route  $LOGRESOURCE/$CHKDATE_NOW/route
+diff $LOGRESOURCE/$CHKDATE_BEFORE/route $LOGRESOURCE/$CHKDATE_NOW/route  
+echo -e "\n"  
 
-echo "== DNS CHANGES ==" &>> $tmp_file
-cat /etc/resolv.conf &>> /IBM_System_check/Resource/$CHKDATE_NOW/resolvconf
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/resolvconf /IBM_System_check/Resource/$CHKDATE_NOW/resolvconf &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== DNS CHANGES =="  
+cat /etc/resolv.conf  $LOGRESOURCE/$CHKDATE_NOW/resolvconf
+diff $LOGRESOURCE/$CHKDATE_BEFORE/resolvconf $LOGRESOURCE/$CHKDATE_NOW/resolvconf  
+echo -e "\n"  
 
-echo "== Network script CHANGES ==" &>> $tmp_file
+echo "== Network script CHANGES =="  
 for int in $(ls /etc/sysconfig/network-scripts/ | grep ifcfg)
 do
-    echo "<-------- $int -------->" &>> /IBM_System_check/Resource/$CHKDATE_NOW/netscripts
-    cat /etc/sysconfig/network-scripts/$int &>> /IBM_System_check/Resource/$CHKDATE_NOW/netscripts
+    echo "<-------- $int -------->"  $LOGRESOURCE/$CHKDATE_NOW/netscripts
+    cat /etc/sysconfig/network-scripts/$int  $LOGRESOURCE/$CHKDATE_NOW/netscripts
 done
-diff /IBM_System_check/Resource/$CHKDATE_BEFORE/netscripts /IBM_System_check/Resource/$CHKDATE_NOW/netscripts &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+diff $LOGRESOURCE/$CHKDATE_BEFORE/netscripts $LOGRESOURCE/$CHKDATE_NOW/netscripts  
+echo -e "\n"  
 
 
 ########## TIME SYNC INFORMATION ##########
 
-echo "**************************************************************************" &>> $tmp_file
-echo "TIME SYNC STATUS" &>> $tmp_file
-echo "**************************************************************************" &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "**************************************************************************"  
+echo "TIME SYNC STATUS"  
+echo "**************************************************************************"  
+echo -e "\n"  
 
-echo "== TIME STATUS ==" &>> $tmp_file
+echo "== TIME STATUS =="  
 if [ $OSCHK -eq 3 ];
 then
-   timedatectl &>> $tmp_file
+   timedatectl  
 else
-   date &>> $tmp_file
-   cat /etc/sysconfig/clock | grep ZONE &>> $tmp_file
+   date  
+   cat /etc/sysconfig/clock | grep ZONE  
 fi
-echo -e "\n" &>> $tmp_file
+echo -e "\n"  
 
-echo "== NTP CHANGES ==" &>> $tmp_file
+echo "== NTP CHANGES =="  
 CHKNTP=`ps -ef | grep -v grep | grep -c ntp`
 if [ $CHKNTP -eq 1 ];
 then
-  echo -e "\n" &>> $tmp_file
-  echo -e "/etc/ntp.conf" &>> $tmp_file
-  cat /etc/ntp.conf &>> /IBM_System_check/Resource/$CHKDATE_NOW/ntpconf
-  diff /IBM_System_check/Resource/$CHKDATE_BEFORE/ntpconf /IBM_System_check/Resource/$CHKDATE_NOW/ntpconf &>> $tmp_file
-  echo -e "\n" &>> $tmp_file
-  echo -e "/etc/sysconfig/ntpd" &>> $tmp_file
-  diff /IBM_System_check/Resource/$CHKDATE_BEFORE/ntpd /IBM_System_check/Resource/$CHKDATE_NOW/ntpd &>> $tmp_file
-  cat /etc/sysconfig/ntpd &>> /IBM_System_check/Resource/$CHKDATE_NOW/ntpd
+  echo -e "\n"  
+  echo -e "/etc/ntp.conf"  
+  cat /etc/ntp.conf  $LOGRESOURCE/$CHKDATE_NOW/ntpconf
+  diff $LOGRESOURCE/$CHKDATE_BEFORE/ntpconf $LOGRESOURCE/$CHKDATE_NOW/ntpconf  
+  echo -e "\n"  
+  echo -e "/etc/sysconfig/ntpd"  
+  diff $LOGRESOURCE/$CHKDATE_BEFORE/ntpd $LOGRESOURCE/$CHKDATE_NOW/ntpd  
+  cat /etc/sysconfig/ntpd  $LOGRESOURCE/$CHKDATE_NOW/ntpd
 else
-  echo "NTP is not running.." &>> $tmp_file
+  echo "NTP is not running.."  
 fi
-echo -e "\n" &>> $tmp_file
+echo -e "\n"  
 
-echo "== NTP CHECK ==" &>> $tmp_file
+echo "== NTP CHECK =="  
 if [ $CHKNTP -eq 1 ];
 then
-  ntpq -p &>> $tmp_file
+  ntpq -p  
 else
-  echo "NTP is not running.." &>> $tmp_file
+  echo "NTP is not running.."  
 fi
-echo -e "\n" &>> $tmp_file
+echo -e "\n"  
 
-echo "== Chrony CHANGES ==" &>> $tmp_file
+echo "== Chrony CHANGES =="  
 
 if [ $CHKCHRONY -eq 1 ];
 CHKCHRONY=`ps -ef | grep -v grep | grep -c chrony`
 then
-  cat /etc/chrony.conf &>> /IBM_System_check/Resource/$CHKDATE_NOW/chronyconf
-  diff /IBM_System_check/Resource/$CHKDATE_BEFORE/chronyconf /IBM_System_check/Resource/$CHKDATE_NOW/chronyconf &>> $tmp_file
+  cat /etc/chrony.conf  $LOGRESOURCE/$CHKDATE_NOW/chronyconf
+  diff $LOGRESOURCE/$CHKDATE_BEFORE/chronyconf $LOGRESOURCE/$CHKDATE_NOW/chronyconf  
 else
-  echo "Chrony is not running.." &>> $tmp_file
+  echo "Chrony is not running.."  
 fi
-echo -e "\n" &>> $tmp_file
+echo -e "\n"  
 
-echo "== CHRONY CHECK ==" &>> $tmp_file
+echo "== CHRONY CHECK =="  
 if [ $CHKCHRONY -eq 1 ];
 then
-  chronyc sources -v &>> $tmp_file
-  chronyc tracking &>> $tmp_file
+  chronyc sources -v  
+  chronyc tracking  
 else
-  echo "Chrony is not running.." &>> $tmp_file
+  echo "Chrony is not running.."  
 fi
-echo -e "\n" &>> $tmp_file
+echo -e "\n"  
 
 
 
 
 ########## SYSTEM RESOURCE USAGE CHECK##########
 
-echo "**************************************************************************" &>> $tmp_file
-echo "SYSTEM RESOURCE USAGE CHECK" &>> $tmp_file
-echo "**************************************************************************" &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "**************************************************************************"  
+echo "SYSTEM RESOURCE USAGE CHECK"  
+echo "**************************************************************************"  
+echo -e "\n"  
 
-echo "== SYSTEM RESOURCE USAGE ==" &>> $tmp_file
-sar -u -r -d -n DEV 1 5 | grep Average &>> $tmp_file
-echo "NOTE : The check period for average is 10 seconds after execute this script." &>> $tmp_file
+echo "== SYSTEM RESOURCE USAGE =="  
+sar -u -r -d -n DEV 1 5 | grep Average  
+echo "NOTE : The check period for average is 10 seconds after execute this script."  
 # this NOTE works whether execute sar or not execute. it is problem...
-echo -e "\n" &>> $tmp_file
+echo -e "\n"  
 
-echo "== CPU USAGE TOP 10 PROCESS ==" &>> $tmp_file
-ps -eo user,pid,ppid,rss,size,vsize,pmem,pcpu,time,cmd --sort -pcpu | head -n 10 &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== CPU USAGE TOP 10 PROCESS =="  
+ps -eo user,pid,ppid,rss,size,vsize,pmem,pcpu,time,cmd --sort -pcpu | head -n 10  
+echo -e "\n"  
 
-echo "== MEMORY USAGE TOP 10 PROCESS ==" &>> $tmp_file
-ps -eo user,pid,ppid,rss,size,vsize,pmem,pcpu,time,cmd --sort -rss | head -n 10 &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== MEMORY USAGE TOP 10 PROCESS =="  
+ps -eo user,pid,ppid,rss,size,vsize,pmem,pcpu,time,cmd --sort -rss | head -n 10  
+echo -e "\n"  
 
 
 ########## CLUSTER INFORMATION ##########
 
-echo "**************************************************************************" &>> $tmp_file
-echo "CLUSTER INFORMATION" &>> $tmp_file
-echo "**************************************************************************" &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "**************************************************************************"  
+echo "CLUSTER INFORMATION"  
+echo "**************************************************************************"  
+echo -e "\n"  
 
-echo "== CLUSTER STATUS ==" &>> $tmp_file
+echo "== CLUSTER STATUS =="  
 case $CLUSTERCHK in
   'rgmanager')
-  clustat &>> $tmp_file 2>&1
+  clustat   2>&1
   ;;
   'pacemaker')
-  pcs status &>> $tmp_file 2>&1
+  pcs status   2>&1
   ;;
   *)
-  echo "The cluster software is not installed.." &>> $tmp_file
+  echo "The cluster software is not installed.."  
   ;;
 esac
-echo -e "\n" &>> $tmp_file
+echo -e "\n"  
 
-echo "== Cluster configuration CHANGES ==" &>> $tmp_file
+echo "== Cluster configuration CHANGES =="  
 case $CLUSTERCHK in
   'rgmanager')
-  cat /etc/cluster/cluster.conf &>> /IBM_System_check/Resource/$CHKDATE_NOW/clusterconf
-  diff /IBM_System_check/Resource/$CHKDATE_BEFORE/clusterconf /IBM_System_check/Resource/$CHKDATE_NOW/clusterconf &>> $tmp_file
+  cat /etc/cluster/cluster.conf  $LOGRESOURCE/$CHKDATE_NOW/clusterconf
+  diff $LOGRESOURCE/$CHKDATE_BEFORE/clusterconf $LOGRESOURCE/$CHKDATE_NOW/clusterconf  
   ;;
   'pacemaker')
-  pcs config &>> /IBM_System_check/Resource/$CHKDATE_NOW/pcsconfig
-  diff /IBM_System_check/Resource/$CHKDATE_BEFORE/pcsconfig /IBM_System_check/Resource/$CHKDATE_NOW/pcsconfig &>> $tmp_file
+  pcs config  $LOGRESOURCE/$CHKDATE_NOW/pcsconfig
+  diff $LOGRESOURCE/$CHKDATE_BEFORE/pcsconfig $LOGRESOURCE/$CHKDATE_NOW/pcsconfig  
   ;;
   *)
-  echo "The cluster software is not installed.." &>> $tmp_file
+  echo "The cluster software is not installed.."  
   ;;
 esac
-echo -e "\n" &>> $tmp_file
+echo -e "\n"  
 
 
 ########## SYSTEM LOG ##########
 
-echo "**************************************************************************" &>> $tmp_file
-echo "SYSTEM LOG" &>> $tmp_file
-echo "**************************************************************************" &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "**************************************************************************"  
+echo "SYSTEM LOG"  
+echo "**************************************************************************"  
+echo -e "\n"  
 
-echo "== CRON LOG ==" &>> $tmp_file
+echo "== CRON LOG =="  
 if [ `cat /var/log/cron* | egrep -i "fail|error|warning|timeout|imklog" | wc -l` -eq 0 ];
 then
-  echo "There is no data in /var/log/cron.." &>> $tmp_file
+  echo "There is no data in /var/log/cron.."  
 else
-  cat /var/log/cron* | egrep -i "fail|error|warning|timeout|imklog" &>> $tmp_file
+  cat /var/log/cron* | egrep -i "fail|error|warning|timeout|imklog"  
 fi
-echo -e "\n" &>> $tmp_file
+echo -e "\n"  
 
-echo "== MESSAGE LOG ==" &>> $tmp_file
-cat /var/log/messages* | egrep -i "fail|error|timeout|imklog|trace:" &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== MESSAGE LOG =="  
+cat /var/log/messages* | egrep -i "fail|error|timeout|imklog|trace:"  
+echo -e "\n"  
 
-echo "== DMESG LOG ==" &>> $tmp_file
-cat /var/log/dmesg* | egrep -i "fail|error|warning|timeout|bug|imklog|trace:" &>> $tmp_file
-stat /var/log/dmesg | grep Modify  &>> $tmp_file
-echo -e "\n" &>> $tmp_file
+echo "== DMESG LOG =="  
+cat /var/log/dmesg* | egrep -i "fail|error|warning|timeout|bug|imklog|trace:"  
+stat /var/log/dmesg | grep Modify   
+echo -e "\n"  
 
-echo "== MCELOG ==" &>> $tmp_file
+echo "== MCELOG =="  
 if [ -f /var/log/mcelog ]; then
-  stat /var/log/mcelog | grep Modify  &>> $tmp_file
-  cat /var/log/mcelog &>> $tmp_file
+  stat /var/log/mcelog | grep Modify   
+  cat /var/log/mcelog  
 else
-  echo "There is no mcelog file. (/var/log/mcelog)" &>> $tmp_file
+  echo "There is no mcelog file. (/var/log/mcelog)"  
 fi
-echo -e "\n" &>> $tmp_file
+echo -e "\n"  
 
 
 ########## DONE ##########
-
+}
+logoutput > $tmp_file 2> /dev/null
 echo -e "\nCollecting date is done.\n"
 echo -e "\nATTENTION!"
 echo -e "The script file 'IBM_System_check.sh' was moved to /IBM_System_check."
 echo -e "When you execute this script later, please enter the /IBM_System_check Directory\n."
 echo -e "The Installed script's home directory is '/IBM_System_check'." 
-echo -e "The Collected log have been saved to the following path:'/IBM_System_Check/Result'\n"
+echo -e "The Collected log have been saved to the following path:'$LOGRESULT'\n"
